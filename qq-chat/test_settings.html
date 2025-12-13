@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试设置功能</title>
+    <!-- API配置文件 -->
+    <script src="api-config.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin-bottom: 30px; padding: 20px; border: 1px solid #ccc; }
+        .result { margin-top: 10px; padding: 10px; background-color: #f5f5f5; }
+        button { margin: 5px; padding: 8px 16px; }
+    </style>
+</head>
+<body>
+    <h1>测试设置功能</h1>
+    
+    <!-- 登录测试 -->
+    <div class="test-section">
+        <h2>登录</h2>
+        <input type="text" id="login-username" placeholder="用户名">
+        <input type="password" id="login-password" placeholder="密码">
+        <button id="login-btn">登录</button>
+        <div class="result" id="login-result"></div>
+    </div>
+    
+    <!-- 用户信息获取测试 -->
+    <div class="test-section">
+        <h2>获取用户信息</h2>
+        <button id="get-user-btn">获取用户信息</button>
+        <div class="result" id="get-user-result"></div>
+    </div>
+    
+    <!-- 更新用户信息测试 -->
+    <div class="test-section">
+        <h2>更新用户信息</h2>
+        <select id="status">
+            <option value="1">在线</option>
+            <option value="2">忙碌</option>
+            <option value="0">离线</option>
+        </select>
+        <button id="update-profile-btn">更新状态</button>
+        <div class="result" id="update-profile-result"></div>
+    </div>
+    
+    <!-- 修改密码测试 -->
+    <div class="test-section">
+        <h2>修改密码</h2>
+        <input type="password" id="current-pwd" placeholder="当前密码">
+        <input type="password" id="new-pwd" placeholder="新密码">
+        <button id="change-pwd-btn">修改密码</button>
+        <div class="result" id="change-pwd-result"></div>
+    </div>
+    
+    <!-- 修改邮箱测试 -->
+    <div class="test-section">
+        <h2>修改邮箱</h2>
+        <input type="email" id="new-email" placeholder="新邮箱">
+        <input type="password" id="email-pwd" placeholder="密码">
+        <button id="change-email-btn">修改邮箱</button>
+        <div class="result" id="change-email-result"></div>
+    </div>
+    
+    <!-- 退出登录测试 -->
+    <div class="test-section">
+        <h2>退出登录</h2>
+        <button id="logout-btn">退出登录</button>
+        <div class="result" id="logout-result"></div>
+    </div>
+    
+    <script>
+        // 登录测试
+        document.getElementById('login-btn').addEventListener('click', function() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            const resultDiv = document.getElementById('login-result');
+            resultDiv.innerHTML = '正在登录...';
+            
+            fetch(API_CONFIG.LOGIN, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({ username: username, password: password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                resultDiv.innerHTML = JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                resultDiv.innerHTML = '错误: ' + error.message;
+            });
+        });
+        
+        // 获取用户信息测试
+        document.getElementById('get-user-btn').addEventListener('click', function() {
+            const resultDiv = document.getElementById('get-user-result');
+            resultDiv.innerHTML = '正在获取...';
+            
+            fetch(API_CONFIG.USER_INFO, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                resultDiv.innerHTML = JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                resultDiv.innerHTML = '错误: ' + error.message;
+            });
+        });
+        
+        // 更新用户信息测试
+        document.getElementById('update-profile-btn').addEventListener('click', function() {
+            const status = document.getElementById('status').value;
+            const resultDiv = document.getElementById('update-profile-result');
+            resultDiv.innerHTML = '正在更新...';
+            
+            fetch('api/user.php', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({ status: status })
+            })
+            .then(response => response.json())
+            .then(data => {
+                resultDiv.innerHTML = JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                resultDiv.innerHTML = '错误: ' + error.message;
+            });
+        });
+        
+        // 修改密码测试
+        document.getElementById('change-pwd-btn').addEventListener('click', function() {
+            const currentPwd = document.getElementById('current-pwd').value;
+            const newPwd = document.getElementById('new-pwd').value;
+            const resultDiv = document.getElementById('change-pwd-result');
+            resultDiv.innerHTML = '正在修改...';
+            
+            fetch('api/user.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    action: 'change_password',
+                    current_password: currentPwd,
+                    new_password: newPwd
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                resultDiv.innerHTML = JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                resultDiv.innerHTML = '错误: ' + error.message;
+            });
+        });
+        
+        // 修改邮箱测试
+        document.getElementById('change-email-btn').addEventListener('click', function() {
+            const newEmail = document.getElementById('new-email').value;
+            const password = document.getElementById('email-pwd').value;
+            const resultDiv = document.getElementById('change-email-result');
+            resultDiv.innerHTML = '正在修改...';
+            
+            fetch('api/user.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    action: 'change_email',
+                    new_email: newEmail,
+                    password: password
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                resultDiv.innerHTML = JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                resultDiv.innerHTML = '错误: ' + error.message;
+            });
+        });
+        
+        // 退出登录测试
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            const resultDiv = document.getElementById('logout-result');
+            resultDiv.innerHTML = '正在退出...';
+            
+            fetch(API_CONFIG.LOGOUT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                resultDiv.innerHTML = JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                resultDiv.innerHTML = '错误: ' + error.message;
+            });
+        });
+    </script>
+</body>
+</html>

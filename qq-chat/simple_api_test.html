@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单API测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { background: #4CAF50; color: white; padding: 10px 15px; border: none; cursor: pointer; margin: 5px; }
+        button:hover { background: #45a049; }
+        .result { margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 5px; white-space: pre-wrap; }
+        .error { background: #ffebee; color: #d32f2f; }
+        .success { background: #e8f5e9; color: #2e7d32; }
+    </style>
+</head>
+<body>
+    <h1>简单API测试</h1>
+    
+    <div class="test-section">
+        <h2>健康检查API</h2>
+        <button onclick="testHealthCheck()">测试健康检查</button>
+        <div id="health-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>登录API测试</h2>
+        <input type="email" id="login-email" placeholder="邮箱" value="test@example.com">
+        <input type="password" id="login-password" placeholder="密码" value="password123">
+        <button onclick="testLogin()">测试登录</button>
+        <div id="login-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>注册API测试</h2>
+        <input type="text" id="register-username" placeholder="用户名" value="testuser">
+        <input type="email" id="register-email" placeholder="邮箱" value="test@example.com">
+        <input type="password" id="register-password" placeholder="密码" value="password123">
+        <button onclick="testRegister()">测试注册</button>
+        <div id="register-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>直接文件访问测试</h2>
+        <button onclick="testDirectFileAccess()">测试直接访问api/login.php</button>
+        <div id="direct-result" class="result"></div>
+    </div>
+    
+    <script>
+        // 获取当前页面的基础URL
+        const baseUrl = window.location.origin + window.location.pathname.replace('simple_api_test.html', '');
+        
+        console.log('基础URL:', baseUrl);
+        
+        // 显示结果
+        function showResult(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.className = `result ${isError ? 'error' : 'success'}`;
+            
+            if (typeof data === 'object') {
+                element.textContent = JSON.stringify(data, null, 2);
+            } else {
+                element.textContent = data;
+            }
+        }
+        
+        // 测试健康检查API
+        function testHealthCheck() {
+            const url = baseUrl + 'health_check.php';
+            console.log('测试健康检查URL:', url);
+            
+            showResult('health-result', '正在测试...');
+            
+            fetch(url)
+                .then(response => {
+                    console.log('健康检查响应状态:', response.status);
+                    console.log('健康检查响应头:', response.headers);
+                    return response.json();
+                })
+                .then(data => {
+                    showResult('health-result', data);
+                })
+                .catch(error => {
+                    console.error('健康检查请求失败:', error);
+                    showResult('health-result', `请求失败: ${error.message}`, true);
+                });
+        }
+        
+        // 测试登录API
+        function testLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const url = baseUrl + 'api/login.php';
+            
+            console.log('测试登录URL:', url);
+            showResult('login-result', '正在测试...');
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            })
+            .then(response => {
+                console.log('登录响应状态:', response.status);
+                console.log('登录响应头:', response.headers);
+                return response.json();
+            })
+            .then(data => {
+                showResult('login-result', data);
+            })
+            .catch(error => {
+                console.error('登录请求失败:', error);
+                showResult('login-result', `请求失败: ${error.message}`, true);
+            });
+        }
+        
+        // 测试注册API
+        function testRegister() {
+            const username = document.getElementById('register-username').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const url = baseUrl + 'api/register.php';
+            
+            console.log('测试注册URL:', url);
+            showResult('register-result', '正在测试...');
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, email, password })
+            })
+            .then(response => {
+                console.log('注册响应状态:', response.status);
+                console.log('注册响应头:', response.headers);
+                return response.json();
+            })
+            .then(data => {
+                showResult('register-result', data);
+            })
+            .catch(error => {
+                console.error('注册请求失败:', error);
+                showResult('register-result', `请求失败: ${error.message}`, true);
+            });
+        }
+        
+        // 测试直接文件访问
+        function testDirectFileAccess() {
+            const url = baseUrl + 'api/login.php';
+            
+            console.log('测试直接访问URL:', url);
+            showResult('direct-result', '正在测试...');
+            
+            fetch(url, {
+                method: 'OPTIONS'
+            })
+            .then(response => {
+                console.log('直接访问响应状态:', response.status);
+                console.log('直接访问响应头:', response.headers);
+                showResult('direct-result', `直接访问成功！状态: ${response.status}`);
+            })
+            .catch(error => {
+                console.error('直接访问请求失败:', error);
+                showResult('direct-result', `请求失败: ${error.message}`, true);
+            });
+        }
+    </script>
+</body>
+</html>

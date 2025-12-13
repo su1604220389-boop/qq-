@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册测试</title>
+    <!-- API配置文件 -->
+    <script src="api-config.js"></script>
+</head>
+<body>
+    <h1>注册测试</h1>
+    <div id="result"></div>
+    
+    <script>
+        // 模拟注册请求
+        const testRegister = async () => {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                resultDiv.innerHTML = '正在发送注册请求...';
+                
+                const response = await fetch(API_CONFIG.REGISTER, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'testuser9',
+                        email: 'test9@example.com',
+                        password: 'testpassword'
+                    })
+                });
+                
+                resultDiv.innerHTML = `响应状态: ${response.status}`;
+                
+                const data = await response.json();
+                resultDiv.innerHTML += `<br>响应内容: ${JSON.stringify(data)}`;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `请求失败: ${error.message}`;
+                console.error('注册请求失败:', error);
+            }
+        };
+        
+        // 页面加载后自动执行测试
+        window.onload = testRegister;
+    </script>
+</body>
+</html>

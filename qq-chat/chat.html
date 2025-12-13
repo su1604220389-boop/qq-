@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QQ聊天 - 主界面</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- API配置文件 -->
+    <script src="api-config.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1E88E5',
+                        secondary: '#64B5F6',
+                        dark: '#0D47A1',
+                        light: '#E3F2FD',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .transition-all-300 {
+                transition: all 0.3s ease;
+            }
+        }
+    </style>
+    <style>
+        body {
+            background-color: #F5F7FA;
+            min-height: 100vh;
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        .chat-container {
+            height: calc(100vh - 4rem);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .sidebar {
+            width: 320px;
+            background-color: white;
+            border-right: 1px solid #E1E8ED;
+            transition: all 0.3s ease;
+        }
+        .sidebar:hover {
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+        }
+        .chat-area {
+            flex: 1;
+            background-color: #F5F7FA;
+            background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%231E88E5" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');
+        }
+        .friend-item {
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            margin: 2px 8px;
+        }
+        .friend-item:hover {
+            background-color: #F5F7FA;
+            transform: translateY(-1px);
+        }
+        .friend-item.active {
+            background-color: #E3F2FD;
+            border-left: 3px solid #1E88E5;
+            box-shadow: 0 2px 8px rgba(30, 136, 229, 0.15);
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 2px white;
+        }
+        .status-online {
+            background-color: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+        .status-offline {
+            background-color: #9E9E9E;
+        }
+        .status-busy {
+            background-color: #F44336;
+        }
+        .message-bubble {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            margin-bottom: 10px;
+            position: relative;
+            word-wrap: break-word;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+        .message-bubble:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .message-sent {
+            background-color: #DCF8C6;
+            border-bottom-right-radius: 4px;
+            align-self: flex-end;
+        }
+        .message-received {
+            background-color: white;
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+        }
+        .message-time {
+            font-size: 11px;
+            color: #9E9E9E;
+            margin-top: 4px;
+        }
+        .message-status {
+            font-size: 11px;
+            color: #1E88E5;
+            margin-left: 4px;
+        }
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 12px;
+            background-color: white;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background-color: #9E9E9E;
+            border-radius: 50%;
+            margin: 0 1px;
+            animation: typing 1.4s infinite both;
+        }
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes typing {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0); }
+        }
+        .new-message-indicator {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { background-color: rgba(30, 136, 229, 0.2); }
+            50% { background-color: rgba(30, 136, 229, 0.4); }
+            100% { background-color: rgba(30, 136, 229, 0.2); }
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 4px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 2px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+        .hover-scale {
+            transition: transform 0.2s ease;
+        }
+        .hover-scale:hover {
+            transform: scale(1.05);
+        }
+        .badge-pulse {
+            position: relative;
+        }
+        .badge-pulse::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            background-color: #F44336;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- 通知容器 -->
+    <div id="notification-container" class="fixed top-20 right-4 z-50 space-y-2"></div>
+    
+
+    <!-- 顶部导航栏 -->
+    <header class="glass-effect shadow-md h-16 flex items-center px-6 sticky top-0 z-50">
+        <div class="flex items-center">
+            <div class="relative">
+                <img class="h-10 w-10 hover-scale" src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/f22a170e413c4446a9de1abdafc63e49~tplv-a9rns2rl98-image.image?rcl=20251211013204EB34B3447BDC28D5F481&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1767979954&x-signature=UoTzCWd5MPq%2BJlAOWtE4jECg30w%3D" alt="QQ聊天">
+                <div class="absolute -bottom-1 -right-1 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">
+                    新版
+                </div>
+            </div>
+            <h1 class="ml-2 text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-dark">QQ聊天</h1>
+        </div>
+        <div class="ml-auto flex items-center">
+            <div class="relative mr-4">
+                <input type="text" placeholder="搜索..." class="pl-8 pr-4 py-1.5 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm w-48 lg:w-64 transition-all duration-300">
+                <i class="fa fa-search absolute left-3 top-2.5 text-gray-400"></i>
+            </div>
+            <button id="settings-btn" class="p-2 rounded-full hover:bg-gray-100 mr-2 relative hover-scale">
+                <i class="fa fa-cog text-gray-600"></i>
+            </button>
+            <div class="relative">
+                <button id="user-menu-btn" class="flex items-center focus:outline-none hover:bg-gray-100 rounded-full p-1 transition-all duration-300">
+                    <div class="relative">
+                        <img id="current-user-avatar" class="h-8 w-8 rounded-full object-cover border-2 border-primary" src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/c5c1cefd210649449e5654488b536610~tplv-a9rns2rl98-image.image?rcl=20251211013204EB34B3447BDC28D5F481&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1767980014&x-signature=vtVRI6%2BteRoXMgyzR8opnDwyN2A%3D" alt="用户头像">
+                        <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white"></span>
+                    </div>
+                    <span id="current-user-name" class="ml-2 text-sm font-medium text-gray-700 hidden sm:inline">测试用户</span>
+                    <i class="fa fa-chevron-down ml-1 text-xs text-gray-500 hidden sm:inline"></i>
+                </button>
+                <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 glass-effect rounded-lg shadow-xl py-1 z-50 border border-gray-100">
+                    <a href="#" id="profile-link" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg mx-1 my-0.5 transition-all duration-200">
+                        <i class="fa fa-user-circle mr-2 text-primary"></i>个人资料
+                    </a>
+                    <a href="settings.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg mx-1 my-0.5 transition-all duration-200">
+                        <i class="fa fa-cog mr-2 text-primary"></i>设置
+                    </a>
+                    <div class="border-t border-gray-200 my-1"></div>
+                    <a href="#" id="logout-link" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg mx-1 my-0.5 transition-all duration-200">
+                        <i class="fa fa-sign-out mr-2 text-red-500"></i>退出登录
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主聊天区域 -->
+    <div class="chat-container flex">
+        <!-- 左侧好友列表 -->
+        <div class="sidebar flex flex-col">
+            <!-- 搜索框 -->
+            <div class="p-4 border-b">
+                <div class="relative">
+                    <input type="text" id="friend-search" placeholder="搜索好友..." 
+                        class="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <i class="fa fa-search absolute left-3 top-3 text-gray-400"></i>
+                </div>
+            </div>
+            
+            <!-- 好友分类标签 -->
+            <div class="flex border-b">
+                <button class="flex-1 py-3 text-center text-primary font-medium border-b-2 border-primary">
+                    <i class="fa fa-users mr-1"></i>好友
+                </button>
+                <button class="flex-1 py-3 text-center text-gray-500 font-medium">
+                    <i class="fa fa-address-book mr-1"></i>群聊
+                </button>
+                <button id="add-friend-btn" class="py-3 px-4 text-center text-primary font-medium hover:bg-gray-100 relative">
+                    <i class="fa fa-plus-circle mr-1"></i>添加
+                </button>
+            </div>
+            
+            <!-- 好友请求区域 -->
+            <div id="friend-requests-container" class="border-b bg-yellow-50 p-3 hidden">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-medium text-yellow-800">好友请求</h3>
+                    <span id="request-count" class="bg-yellow-600 text-white text-xs rounded-full px-2 py-0.5">0</span>
+                </div>
+                <div id="friend-requests-list" class="space-y-2">
+                    <!-- 好友请求将通过JavaScript动态生成 -->
+                </div>
+            </div>
+            
+            <!-- 好友列表 -->
+            <div id="friends-list" class="flex-1 overflow-y-auto scrollbar-thin p-2">
+                <!-- 好友列表将通过JavaScript动态生成 -->
+                <!-- 在线好友分组 -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between px-3 py-1.5">
+                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">在线好友</h3>
+                        <span class="text-xs text-gray-500" id="online-count">2 位</span>
+                    </div>
+                    <div id="online-friends" class="mt-1">
+                        <!-- 在线好友将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+                
+                <!-- 离线好友分组 -->
+                <div>
+                    <div class="flex items-center justify-between px-3 py-1.5">
+                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">离线好友</h3>
+                        <span class="text-xs text-gray-500" id="offline-count">2 位</span>
+                    </div>
+                    <div id="offline-friends" class="mt-1">
+                        <!-- 离线好友将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 右侧聊天区域 -->
+        <div id="chat-area" class="chat-area flex flex-col">
+            <!-- 未选择好友时的提示 -->
+            <div id="no-friend-selected" class="flex-1 flex items-center justify-center">
+                <div class="text-center">
+                    <i class="fa fa-comments text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-medium text-gray-500">选择一个好友开始聊天</h3>
+                    <p class="text-sm text-gray-400 mt-2">或者搜索好友添加新的联系人</p>
+                </div>
+            </div>
+            
+            <!-- 聊天界面 -->
+            <div id="chat-interface" class="hidden flex-1 flex flex-col">
+                <!-- 简化的聊天头部 -->
+                <div class="bg-white p-3 border-b flex items-center">
+                    <div class="relative">
+                        <img id="chat-friend-avatar" class="h-8 w-8 rounded-full object-cover" src="" alt="好友头像">
+                        <span id="chat-friend-status" class="status-dot status-online absolute bottom-0 right-0 border-2 border-white"></span>
+                    </div>
+                    <div class="ml-2">
+                        <h3 id="chat-friend-name" class="font-medium text-gray-800 text-sm"></h3>
+                    </div>
+                </div>
+                
+                <!-- 消息区域 -->
+                <div id="messages-container" class="flex-1 overflow-y-auto p-4 space-y-4">
+                    <!-- 消息将通过JavaScript动态生成 -->
+                </div>
+                
+                <!-- 输入区域 -->
+                <div class="glass-effect p-4 border-t sticky bottom-0 z-40">
+                    <div class="flex items-end">
+                        <div class="flex-1 bg-white rounded-2xl p-2 shadow-sm border border-gray-100">
+                            <div class="flex items-center mb-2">
+                                <button class="p-1.5 text-gray-500 hover:text-primary hover:bg-gray-100 rounded-full transition-all duration-200">
+                                    <i class="fa fa-smile-o text-lg"></i>
+                                </button>
+                                <button class="p-1.5 text-gray-500 hover:text-primary hover:bg-gray-100 rounded-full transition-all duration-200 mx-1">
+                                    <i class="fa fa-image text-lg"></i>
+                                </button>
+                                <button class="p-1.5 text-gray-500 hover:text-primary hover:bg-gray-100 rounded-full transition-all duration-200 mx-1">
+                                    <i class="fa fa-paperclip text-lg"></i>
+                                </button>
+                                <button class="p-1.5 text-gray-500 hover:text-primary hover:bg-gray-100 rounded-full transition-all duration-200">
+                                    <i class="fa fa-microphone text-lg"></i>
+                                </button>
+                            </div>
+                            <textarea id="message-input" rows="1" placeholder="输入消息..." 
+                                class="w-full border-none bg-transparent focus:outline-none resize-none text-gray-800 placeholder-gray-400 font-medium"></textarea>
+                        </div>
+                        <button id="send-message-btn" class="ml-2 p-3 bg-gradient-to-r from-primary to-blue-600 text-white rounded-full hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+                            <i class="fa fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加好友模态框 -->
+    <div id="add-friend-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg w-full max-w-md">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 class="font-medium text-lg">添加好友</h3>
+                <button id="close-add-friend-modal" class="text-gray-400 hover:text-gray-600">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <div class="relative">
+                    <input type="text" id="add-friend-input" placeholder="输入用户名搜索用户..." 
+                        class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <i class="fa fa-search absolute left-3 top-3 text-gray-400"></i>
+                    <button id="search-user-btn" class="absolute right-3 top-2 text-primary hover:text-dark">
+                        <i class="fa fa-search"></i>
+                    </button>
+                </div>
+                <div id="search-results" class="mt-4 max-h-60 overflow-y-auto">
+                    <!-- 搜索结果将通过JavaScript动态生成 -->
+                    <div class="text-center text-gray-500 py-4" id="search-placeholder">
+                        输入用户名搜索用户
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 border-t flex justify-end">
+                <button id="cancel-add-friend" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded mr-2">
+                    取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentUser = JSON.parse(localStorage.getItem('user'));
+        let friends = [];
+        
+        // 检查用户是否已登录
+        if (!currentUser) {
+            window.location.href = 'index.html';
+        }
+
+        // 当前选中的好友
+        let selectedFriend = null;
+
+        // DOM加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化用户信息
+            document.getElementById('current-user-name').textContent = currentUser.username;
+            document.getElementById('current-user-avatar').src = currentUser.avatar;
+            
+            // 获取好友列表
+            getFriendsList();
+            
+            // 获取好友请求
+            getFriendRequests();
+            
+            // 绑定事件
+            bindEvents();
+            
+            // 定期刷新好友列表、消息和好友请求
+            setInterval(() => {
+                if (selectedFriend) {
+                    getMessages(selectedFriend.id);
+                }
+                getFriendsList();
+                getFriendRequests();
+            }, 5000); // 每5秒刷新一次
+        });
+        
+        // 获取好友列表
+        function getFriendsList() {
+            fetch(API_CONFIG.FRIENDS, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // 更新好友列表
+                    friends = data.friends;
+                    renderFriendsList();
+                } else {
+                    console.error('获取好友列表失败:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('获取好友列表请求失败:', error);
+            });
+        }
+        
+        // 获取好友请求
+        function getFriendRequests() {
+            fetch('api/friends.php?action=requests', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // 更新好友请求列表
+                    renderFriendRequests(data.requests);
+                } else {
+                    console.error('获取好友请求失败:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('获取好友请求请求失败:', error);
+            });
+        }
+        
+        // 渲染好友请求列表
+        function renderFriendRequests(requests) {
+            const requestsContainer = document.getElementById('friend-requests-container');
+            const requestsList = document.getElementById('friend-requests-list');
+            const requestCount = document.getElementById('request-count');
+            
+            // 更新请求数量
+            requestCount.textContent = requests.length;
+            
+            // 显示或隐藏请求区域
+            if (requests.length > 0) {
+                requestsContainer.classList.remove('hidden');
+            } else {
+                requestsContainer.classList.add('hidden');
+            }
+            
+            // 清空请求列表
+            requestsList.innerHTML = '';
+            
+            // 渲染每个请求
+            requests.forEach(request => {
+                const requestElement = document.createElement('div');
+                requestElement.className = 'flex items-center justify-between p-2 bg-white rounded-lg shadow-sm';
+                
+                requestElement.innerHTML = `
+                    <div class="flex items-center">
+                        <img class="h-8 w-8 rounded-full object-cover" src="${request.avatar}" alt="${request.username}">
+                        <div class="ml-2">
+                            <h4 class="text-sm font-medium text-gray-800">${request.username}</h4>
+                            <p class="text-xs text-gray-500">请求添加您为好友</p>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button class="accept-request-btn px-2 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600" data-user-id="${request.id}">
+                            接受
+                        </button>
+                        <button class="reject-request-btn px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600" data-user-id="${request.id}">
+                            拒绝
+                        </button>
+                    </div>
+                `;
+                
+                requestsList.appendChild(requestElement);
+            });
+            
+            // 绑定接受请求按钮事件
+            document.querySelectorAll('.accept-request-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = parseInt(this.dataset.userId);
+                    handleFriendRequest(userId, 'accept');
+                });
+            });
+            
+            // 绑定拒绝请求按钮事件
+            document.querySelectorAll('.reject-request-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = parseInt(this.dataset.userId);
+                    handleFriendRequest(userId, 'reject');
+                });
+            });
+        }
+        
+        // 处理好友请求
+        function handleFriendRequest(userId, action) {
+            fetch(API_CONFIG.FRIENDS, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    friend_id: userId,
+                    action: action
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // 重新获取好友请求和好友列表
+                    getFriendRequests();
+                    getFriendsList();
+                    
+                    // 显示成功消息
+                    const message = action === 'accept' ? '已接受好友请求' : '已拒绝好友请求';
+                    showNotification(message, 'success');
+                } else {
+                    console.error(`${action === 'accept' ? '接受' : '拒绝'}好友请求失败:`, data.message);
+                    showNotification(`${action === 'accept' ? '接受' : '拒绝'}好友请求失败`, 'error');
+                }
+            })
+            .catch(error => {
+                console.error(`${action === 'accept' ? '接受' : '拒绝'}好友请求请求失败:`, error);
+                showNotification('网络错误，请稍后重试', 'error');
+            });
+        }
+        
+        // 获取消息列表
+        function getMessages(friendId) {
+            fetch(`api/messages.php?friend_id=${friendId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // 找到对应的好友
+                    const friend = friends.find(f => f.id === friendId);
+                    if (friend) {
+                        // 更新消息列表
+                        friend.messages = data.messages;
+                        
+                        // 如果当前选中的是这个好友，重新渲染消息列表
+                        if (selectedFriend && selectedFriend.id === friendId) {
+                            renderMessages(friend.messages);
+                        }
+                    }
+                } else {
+                    console.error('获取消息列表失败:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('获取消息列表请求失败:', error);
+            });
+        }
+
+        // 渲染好友列表
+        function renderFriendsList() {
+            const onlineFriendsContainer = document.getElementById('online-friends');
+            const offlineFriendsContainer = document.getElementById('offline-friends');
+            
+            // 清空容器
+            onlineFriendsContainer.innerHTML = '';
+            offlineFriendsContainer.innerHTML = '';
+            
+            // 统计在线和离线好友数量
+            let onlineCount = 0;
+            let offlineCount = 0;
+            
+            friends.forEach(friend => {
+                const friendItem = document.createElement('div');
+                friendItem.className = 'friend-item p-3 flex items-center cursor-pointer';
+                friendItem.dataset.friendId = friend.id;
+                
+                // 设置在线状态类
+                let statusClass = 'status-offline';
+                let statusText = '离线';
+                
+                if (friend.status === 1) {
+                    statusClass = 'status-online';
+                    statusText = '在线';
+                    onlineCount++;
+                } else if (friend.status === 2) {
+                    statusClass = 'status-busy';
+                    statusText = '忙碌';
+                    onlineCount++;
+                } else {
+                    offlineCount++;
+                }
+                
+                // 设置未读消息样式
+                let unreadBadge = '';
+                if (friend.unreadCount > 0) {
+                    unreadBadge = `<span class="absolute top-2 right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">${friend.unreadCount}</span>`;
+                }
+                
+                // 设置最后消息样式
+                let lastMessageClass = '';
+                if (friend.unreadCount > 0) {
+                    lastMessageClass = 'font-medium text-primary';
+                }
+                
+                friendItem.innerHTML = `
+                    <div class="relative">
+                        <img class="h-10 w-10 rounded-full object-cover border-2 border-transparent hover:border-primary transition-all duration-300" src="${friend.avatar}" alt="${friend.username}">
+                        <span class="status-dot ${statusClass} absolute bottom-0 right-0 border-2 border-white"></span>
+                        ${unreadBadge}
+                    </div>
+                    <div class="ml-3 flex-1 min-w-0">
+                        <div class="flex justify-between items-center">
+                            <h4 class="text-sm font-medium text-gray-800 truncate">${friend.username}</h4>
+                            <span class="text-xs text-gray-500">${friend.lastMessageTime}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 truncate ${lastMessageClass}">${friend.lastMessage}</p>
+                    </div>
+                `;
+                
+                // 根据在线状态添加到不同容器
+                if (friend.status === 1 || friend.status === 2) {
+                    onlineFriendsContainer.appendChild(friendItem);
+                } else {
+                    offlineFriendsContainer.appendChild(friendItem);
+                }
+                
+                // 绑定点击事件
+                friendItem.addEventListener('click', function() {
+                    selectFriend(friend);
+                });
+            });
+            
+            // 更新好友数量显示
+            document.getElementById('online-count').textContent = `${onlineCount} 位`;
+            document.getElementById('offline-count').textContent = `${offlineCount} 位`;
+        }
+
+        // 选择好友
+        function selectFriend(friend) {
+            // 更新选中状态
+            document.querySelectorAll('.friend-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`.friend-item[data-friend-id="${friend.id}"]`).classList.add('active');
+            
+            // 更新当前选中的好友
+            selectedFriend = friend;
+            
+            // 显示聊天界面，隐藏提示
+            document.getElementById('no-friend-selected').classList.add('hidden');
+            document.getElementById('chat-interface').classList.remove('hidden');
+            
+            // 更新聊天头部信息
+            document.getElementById('chat-friend-name').textContent = friend.username;
+            document.getElementById('chat-friend-avatar').src = friend.avatar;
+            
+            // 设置在线状态
+            const statusDot = document.getElementById('chat-friend-status');
+            statusDot.className = 'status-dot absolute bottom-0 right-0 border-2 border-white';
+            
+            if (friend.status === 1) {
+                statusDot.classList.add('status-online');
+            } else if (friend.status === 2) {
+                statusDot.classList.add('status-busy');
+            } else {
+                statusDot.classList.add('status-offline');
+            }
+            
+            // 渲染消息列表
+            renderMessages(friend.messages);
+            
+            // 清除未读消息计数
+            friend.unreadCount = 0;
+            renderFriendsList();
+            
+            // 添加选择好友的动画效果
+            const chatInterface = document.getElementById('chat-interface');
+            chatInterface.style.opacity = '0';
+            chatInterface.style.transform = 'translateY(10px)';
+            
+            setTimeout(() => {
+                chatInterface.style.transition = 'all 0.3s ease';
+                chatInterface.style.opacity = '1';
+                chatInterface.style.transform = 'translateY(0)';
+            }, 10);
+        }
+
+        // 渲染消息列表
+        function renderMessages(messages) {
+            const messagesContainer = document.getElementById('messages-container');
+            messagesContainer.innerHTML = '';
+            
+            messages.forEach(message => {
+                const messageElement = document.createElement('div');
+                messageElement.className = 'flex flex-col';
+                
+                if (message.sender_id === currentUser.id) {
+                    messageElement.classList.add('items-end');
+                    messageElement.innerHTML = `
+                        <div class="message-bubble message-sent">
+                            <p>${message.content}</p>
+                            <div class="flex items-center justify-end">
+                                <span class="message-time">${message.timestamp}</span>
+                                <span class="message-status">
+                                    ${message.isRead ? '<i class="fa fa-check-circle"></i>' : '<i class="fa fa-check"></i>'}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    messageElement.classList.add('items-start');
+                    messageElement.innerHTML = `
+                        <div class="message-bubble message-received">
+                            <p>${message.content}</p>
+                            <div class="flex justify-end">
+                                <span class="message-time">${message.timestamp}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                messagesContainer.appendChild(messageElement);
+            });
+            
+            // 滚动到底部
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // 发送消息
+        function sendMessage() {
+            const messageInput = document.getElementById('message-input');
+            const content = messageInput.value.trim();
+            
+            if (!content || !selectedFriend) return;
+            
+            // 发送消息到API
+            fetch(API_CONFIG.MESSAGES, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    receiver_id: selectedFriend.id,
+                    content: content
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // 添加到消息列表
+                    const newMessage = data.message;
+                    
+                    // 确保messages数组存在
+                    if (!selectedFriend.messages) {
+                        selectedFriend.messages = [];
+                    }
+                    
+                    selectedFriend.messages.push(newMessage);
+                    
+                    // 更新最后一条消息
+                    selectedFriend.lastMessage = content;
+                    selectedFriend.lastMessageTime = newMessage.created_at;
+                    
+                    // 重新渲染消息列表和好友列表
+                    renderMessages(selectedFriend.messages);
+                    renderFriendsList();
+                    
+                    // 清空输入框
+                    messageInput.value = '';
+                } else {
+                    console.error('发送消息失败:', data.message);
+                    alert('发送消息失败，请稍后重试');
+                }
+            })
+            .catch(error => {
+                console.error('发送消息请求失败:', error);
+                alert('网络错误，请稍后重试');
+            });
+        }
+
+        // 显示通知
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notification-container');
+            const notification = document.createElement('div');
+            
+            // 设置通知样式
+            let bgColor = 'bg-blue-500'; // 默认信息通知
+            if (type === 'success') {
+                bgColor = 'bg-green-500';
+            } else if (type === 'error') {
+                bgColor = 'bg-red-500';
+            } else if (type === 'warning') {
+                bgColor = 'bg-yellow-500';
+            }
+            
+            notification.className = `${bgColor} text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 opacity-0 translate-x-full`;
+            notification.textContent = message;
+            
+            // 添加到容器
+            container.appendChild(notification);
+            
+            // 显示通知
+            setTimeout(() => {
+                notification.classList.remove('opacity-0', 'translate-x-full');
+            }, 10);
+            
+            // 自动隐藏
+            setTimeout(() => {
+                notification.classList.add('opacity-0', 'translate-x-full');
+                setTimeout(() => {
+                    container.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+        
+        // 绑定事件
+        function bindEvents() {
+            // 用户菜单下拉
+            document.getElementById('user-menu-btn').addEventListener('click', function() {
+                document.getElementById('user-dropdown').classList.toggle('hidden');
+            });
+            
+            // 点击其他地方关闭用户菜单
+            document.addEventListener('click', function(e) {
+                const userMenu = document.getElementById('user-dropdown');
+                const userMenuBtn = document.getElementById('user-menu-btn');
+                
+                if (!userMenuBtn.contains(e.target) && !userMenu.contains(e.target)) {
+                    userMenu.classList.add('hidden');
+                }
+            });
+            
+            // 退出登录
+            document.getElementById('logout-link').addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // 发送退出登录请求到API
+                fetch(API_CONFIG.LOGOUT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // 无论成功与否，都清除本地存储并重定向到登录页面
+                    localStorage.removeItem('user');
+                    window.location.href = 'index.html';
+                })
+                .catch(error => {
+                    console.error('退出登录请求失败:', error);
+                    // 即使请求失败，也清除本地存储并重定向到登录页面
+                    localStorage.removeItem('user');
+                    window.location.href = 'index.html';
+                });
+            });
+            
+            // 发送消息按钮
+            document.getElementById('send-message-btn').addEventListener('click', sendMessage);
+            
+            // 输入框回车发送
+            document.getElementById('message-input').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            // 输入框自动调整高度
+            document.getElementById('message-input').addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+            
+            // 添加好友按钮
+            document.getElementById('add-friend-btn').addEventListener('click', function() {
+                document.getElementById('add-friend-modal').classList.remove('hidden');
+            });
+            
+            // 关闭添加好友模态框
+            document.getElementById('close-add-friend-modal').addEventListener('click', function() {
+                document.getElementById('add-friend-modal').classList.add('hidden');
+            });
+            
+            document.getElementById('cancel-add-friend').addEventListener('click', function() {
+                document.getElementById('add-friend-modal').classList.add('hidden');
+            });
+            
+            // 点击模态框外部关闭
+            document.getElementById('add-friend-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.add('hidden');
+                }
+            });
+            
+            // 搜索用户
+            function searchUsers() {
+                const input = document.getElementById('add-friend-input');
+                const value = input.value.trim();
+                const searchResults = document.getElementById('search-results');
+                const searchPlaceholder = document.getElementById('search-placeholder');
+                
+                if (!value) {
+                    searchPlaceholder.classList.remove('hidden');
+                    searchResults.innerHTML = '';
+                    searchResults.appendChild(searchPlaceholder);
+                    return;
+                }
+                
+                // 隐藏占位符
+                searchPlaceholder.classList.add('hidden');
+                
+                // 发送请求搜索用户
+                fetch(`api/friends.php?action=search&username=${encodeURIComponent(value)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // 清空搜索结果
+                    searchResults.innerHTML = '';
+                    
+                    if (data.status !== 'success' || data.users.length === 0) {
+                        searchResults.innerHTML = '<div class="text-center text-gray-500 py-4">未找到匹配的用户</div>';
+                        return;
+                    }
+                    
+                    // 显示搜索结果
+                    data.users.forEach(user => {
+                        const userElement = document.createElement('div');
+                        userElement.className = 'flex items-center justify-between p-3 hover:bg-gray-100 rounded';
+                        
+                        // 设置在线状态类
+                        let statusClass = 'status-offline';
+                        let statusText = '离线';
+                        
+                        if (user.status === 1) {
+                            statusClass = 'status-online';
+                            statusText = '在线';
+                        } else if (user.status === 2) {
+                            statusClass = 'status-busy';
+                            statusText = '忙碌';
+                        }
+                        
+                        userElement.innerHTML = `
+                            <div class="flex items-center">
+                                <div class="relative">
+                                    <img class="h-10 w-10 rounded-full object-cover" src="${user.avatar}" alt="${user.username}">
+                                    <span class="status-dot ${statusClass} absolute bottom-0 right-0 border-2 border-white"></span>
+                                </div>
+                                <div class="ml-3">
+                                    <h4 class="text-sm font-medium text-gray-800">${user.username}</h4>
+                                    <span class="text-xs text-gray-500">${statusText}</span>
+                                </div>
+                            </div>
+                            <button class="add-friend-btn px-3 py-1 bg-primary text-white rounded-full text-sm hover:bg-dark" data-user-id="${user.id}" data-username="${user.username}">
+                                添加
+                            </button>
+                        `;
+                        
+                        searchResults.appendChild(userElement);
+                    });
+                    
+                    // 绑定添加好友按钮事件
+                    document.querySelectorAll('.add-friend-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const userId = parseInt(this.dataset.userId);
+                            const username = this.dataset.username;
+                            sendFriendRequest(userId, username);
+                        });
+                    });
+                })
+                .catch(error => {
+                    console.error('搜索用户请求失败:', error);
+                    searchResults.innerHTML = '<div class="text-center text-red-500 py-4">搜索失败，请稍后重试</div>';
+                });
+            }
+            
+            // 发送好友请求
+            function sendFriendRequest(userId, username) {
+                // 发送好友请求到API
+                fetch(API_CONFIG.FRIENDS, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ friend_id: userId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // 显示成功提示
+                        alert(`好友请求已发送给 ${username}`);
+                        
+                        // 关闭模态框并清空输入
+                        document.getElementById('add-friend-modal').classList.add('hidden');
+                        document.getElementById('add-friend-input').value = '';
+                    } else {
+                        alert(`发送好友请求失败: ${data.message || '未知错误'}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('发送好友请求失败:', error);
+                    alert('网络错误，请稍后重试');
+                });
+            }
+            
+            // 搜索按钮点击事件
+            document.getElementById('search-user-btn').addEventListener('click', searchUsers);
+            
+            // 输入框回车搜索
+            document.getElementById('add-friend-input').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    searchUsers();
+                }
+            });
+            
+            // 好友搜索
+            document.getElementById('friend-search').addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const friendItems = document.querySelectorAll('.friend-item');
+                
+                friendItems.forEach(item => {
+                    const friendName = item.querySelector('h4').textContent.toLowerCase();
+                    const lastMessage = item.querySelector('p').textContent.toLowerCase();
+                    
+                    if (friendName.includes(searchTerm) || lastMessage.includes(searchTerm)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+        
+
+    </script>
+</body>
+</html>

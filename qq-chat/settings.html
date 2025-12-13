@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>账户设置 - QQ聊天</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- API配置文件 -->
+    <script src="api-config.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1E88E5',
+                        secondary: '#42A5F5',
+                        dark: '#1565C0',
+                        light: '#E3F2FD',
+                        success: '#4CAF50',
+                        error: '#F44336',
+                        warning: '#FF9800',
+                        info: '#2196F3'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .transition-all-300 {
+                transition: all 0.3s ease;
+            }
+            .shadow-card {
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            }
+            .input-focus {
+                @apply focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
+            }
+            .btn-primary {
+                @apply bg-primary text-white py-2 px-4 rounded hover:bg-dark transition-all duration-200;
+            }
+            .btn-secondary {
+                @apply bg-gray-100 text-gray-700 py-2 px-4 rounded hover:bg-gray-200 transition-all duration-200;
+            }
+            .btn-danger {
+                @apply bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition-all duration-200;
+            }
+            .card {
+                @apply bg-white rounded-lg shadow-card p-6;
+            }
+            .form-group {
+                @apply mb-4;
+            }
+            .form-label {
+                @apply block text-sm font-medium text-gray-700 mb-1;
+            }
+            .form-input {
+                @apply w-full px-3 py-2 border border-gray-300 rounded-md input-focus;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <a href="chat.html" class="flex items-center">
+                    <i class="fa fa-arrow-left text-gray-600 mr-3"></i>
+                    <h1 class="text-xl font-bold text-primary">QQ聊天</h1>
+                </a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span id="header-username" class="text-sm text-gray-600">用户名</span>
+                <div class="relative">
+                    <img id="header-avatar" class="h-8 w-8 rounded-full object-cover" src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/c5c1cefd210649449e5654488b536610~tplv-a9rns2rl98-image.image?rcl=20251211013204EB34B3447BDC28D5F481&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1767980014&x-signature=vtVRI6%2BteRoXMgyzR8opnDwyN2A%3D" alt="头像">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要内容 -->
+    <main class="container mx-auto px-4 py-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">账户设置</h2>
+        
+        <!-- 通知容器 -->
+        <div id="notification-container" class="fixed top-20 right-4 z-50 space-y-2"></div>
+        
+        <!-- 设置选项卡 -->
+        <div class="bg-white rounded-lg shadow-sm mb-6">
+            <div class="border-b">
+                <nav class="flex -mb-px">
+                    <button class="settings-tab text-primary border-primary px-6 py-4 border-b-2 font-medium text-sm" data-tab="profile">
+                        个人信息
+                    </button>
+                    <button class="settings-tab text-gray-500 hover:text-gray-700 px-6 py-4 border-b-2 border-transparent font-medium text-sm" data-tab="security">
+                        账户安全
+                    </button>
+                    <button class="settings-tab text-gray-500 hover:text-gray-700 px-6 py-4 border-b-2 border-transparent font-medium text-sm" data-tab="account">
+                        账户操作
+                    </button>
+                </nav>
+            </div>
+            
+            <!-- 个人信息选项卡 -->
+            <div id="profile-tab" class="settings-content p-6">
+                <div class="max-w-md mx-auto">
+                    <!-- 头像设置 -->
+                    <div class="flex flex-col items-center mb-8">
+                        <div class="relative mb-4">
+                            <img id="profile-avatar" class="h-24 w-24 rounded-full object-cover border-4 border-white shadow-md" src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/c5c1cefd210649449e5654488b536610~tplv-a9rns2rl98-image.image?rcl=20251211013204EB34B3447BDC28D5F481&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1767980014&x-signature=vtVRI6%2BteRoXMgyzR8opnDwyN2A%3D" alt="头像">
+                            <button id="change-avatar-btn" class="absolute bottom-0 right-0 bg-primary text-white rounded-full p-2 shadow-md hover:bg-dark transition-all duration-200">
+                                <i class="fa fa-camera"></i>
+                            </button>
+                        </div>
+                        <h3 id="profile-username" class="text-xl font-medium text-gray-800">用户名</h3>
+                        <p class="text-sm text-gray-500">用户名不可修改</p>
+                    </div>
+                    
+                    <!-- 个人资料表单 -->
+                    <form id="profile-form">
+                        <div class="form-group">
+                            <label for="email" class="form-label">邮箱</label>
+                            <input type="email" id="email" name="email" class="form-input" value="test@example.com" readonly>
+                            <button type="button" id="change-email-btn" class="mt-2 text-sm text-primary hover:text-dark">
+                                修改邮箱
+                            </button>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="status" class="form-label">在线状态</label>
+                            <select id="status" name="status" class="form-input">
+                                <option value="1">在线</option>
+                                <option value="2">忙碌</option>
+                                <option value="0">离线</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex justify-end">
+                            <button type="submit" class="btn-primary">
+                                保存设置
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- 账户安全选项卡 -->
+            <div id="security-tab" class="settings-content p-6 hidden">
+                <div class="max-w-md mx-auto">
+                    <!-- 密码修改 -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-medium text-gray-800 mb-4">修改密码</h3>
+                        <form id="password-form">
+                            <div class="form-group">
+                                <label for="current-password" class="form-label">当前密码</label>
+                                <input type="password" id="current-password" name="current_password" class="form-input" placeholder="请输入当前密码">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="new-password" class="form-label">新密码</label>
+                                <input type="password" id="new-password" name="new_password" class="form-input" placeholder="请输入新密码">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="confirm-password" class="form-label">确认新密码</label>
+                                <input type="password" id="confirm-password" name="confirm_password" class="form-input" placeholder="请再次输入新密码">
+                            </div>
+                            
+                            <div class="flex justify-end">
+                                <button type="submit" class="btn-primary">
+                                    修改密码
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- 登录设备 -->
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-800 mb-4">登录设备</h3>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <i class="fa fa-desktop text-primary text-xl mr-3"></i>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-800">当前设备</p>
+                                        <p class="text-xs text-gray-500">浏览器: Chrome</p>
+                                    </div>
+                                </div>
+                                <span class="text-xs text-green-500">当前在线</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 账户操作选项卡 -->
+            <div id="account-tab" class="settings-content p-6 hidden">
+                <div class="max-w-md mx-auto">
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fa fa-exclamation-triangle text-yellow-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-yellow-700">
+                                    注销账号将删除您的所有数据，此操作不可撤销！
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-lg font-medium text-gray-800 mb-4">注销账号</h3>
+                        <p class="text-sm text-gray-600 mb-4">
+                            注销账号后，您的所有聊天记录、好友关系和个人信息将被永久删除，无法恢复。
+                        </p>
+                        <button id="delete-account-btn" class="btn-danger w-full">
+                            <i class="fa fa-trash mr-2"></i>注销账号
+                        </button>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-800 mb-4">退出登录</h3>
+                        <button id="logout-btn" class="btn-secondary w-full">
+                            <i class="fa fa-sign-out mr-2"></i>退出登录
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 修改邮箱模态框 -->
+    <div id="change-email-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg w-full max-w-sm">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 class="font-medium text-lg">修改邮箱</h3>
+                <button class="close-modal text-gray-400 hover:text-gray-600">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <form id="change-email-form">
+                    <div class="form-group">
+                        <label class="form-label">当前邮箱</label>
+                        <input type="email" id="current-email" class="form-input" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-email" class="form-label">新邮箱</label>
+                        <input type="email" id="new-email" name="new_email" class="form-input" placeholder="请输入新邮箱" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email-password" class="form-label">密码</label>
+                        <input type="password" id="email-password" name="password" class="form-input" placeholder="请输入密码" required>
+                    </div>
+                    <div class="flex justify-end space-x-2">
+                        <button type="button" class="close-modal btn-secondary">
+                            取消
+                        </button>
+                        <button type="submit" class="btn-primary">
+                            确认修改
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 注销账号确认模态框 -->
+    <div id="delete-account-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg w-full max-w-sm">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 class="font-medium text-lg text-red-600">注销账号</h3>
+                <button class="close-modal text-gray-400 hover:text-gray-600">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <p class="text-red-600 mb-4">警告：注销账号将删除您的所有数据，此操作不可撤销！</p>
+                <p class="text-sm text-gray-600 mb-4">请输入您的密码确认注销账号：</p>
+                <form id="delete-account-form">
+                    <div class="form-group">
+                        <input type="password" id="delete-password" name="password" class="form-input" placeholder="请输入密码" required>
+                    </div>
+                    <div class="flex justify-end space-x-2">
+                        <button type="button" class="close-modal btn-secondary">
+                            取消
+                        </button>
+                        <button type="submit" class="btn-danger">
+                            确认注销
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 检查用户是否已登录
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLoginStatus();
+            initSettingsTabs();
+            loadUserSettings();
+            bindEvents();
+        });
+        
+        // 检查登录状态
+        function checkLoginStatus() {
+            // 先检查本地存储中是否有用户信息
+            const userInfo = localStorage.getItem('user');
+            if (!userInfo) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // 尝试解析用户信息
+            try {
+                const user = JSON.parse(userInfo);
+                // 如果有用户ID，继续加载页面
+                if (user.id) {
+                    // 可以在这里预填充一些用户信息
+                    document.getElementById('header-username').textContent = user.username || '用户名';
+                    if (user.avatar) {
+                        document.getElementById('header-avatar').src = user.avatar;
+                        document.getElementById('profile-avatar').src = user.avatar;
+                    }
+                    return;
+                }
+            } catch (e) {
+                console.error('解析用户信息失败:', e);
+            }
+            
+            // 如果本地存储中没有有效用户信息，重定向到登录页面
+            window.location.href = 'index.html';
+        }
+        
+        // 初始化设置选项卡
+        function initSettingsTabs() {
+            const tabs = document.querySelectorAll('.settings-tab');
+            const contents = document.querySelectorAll('.settings-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.dataset.tab;
+                    
+                    // 移除所有选项卡的活动状态
+                    tabs.forEach(t => {
+                        t.classList.remove('text-primary', 'border-primary');
+                        t.classList.add('text-gray-500', 'border-transparent');
+                    });
+                    
+                    // 隐藏所有内容
+                    contents.forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    
+                    // 激活当前选项卡
+                    this.classList.remove('text-gray-500', 'border-transparent');
+                    this.classList.add('text-primary', 'border-primary');
+                    
+                    // 显示对应内容
+                    document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+                });
+            });
+        }
+        
+        // 加载用户设置
+        function loadUserSettings() {
+            // 首先尝试从本地存储获取用户信息
+            const userInfo = localStorage.getItem('user');
+            if (userInfo) {
+                try {
+                    const user = JSON.parse(userInfo);
+                    // 使用本地存储的用户信息更新页面
+                    updateUserInfoOnPage(user);
+                } catch (e) {
+                    console.error('解析本地用户信息失败:', e);
+                }
+            }
+            
+            // 然后尝试从API获取最新的用户信息
+            fetch(API_CONFIG.USER_INFO, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            })
+            .then(response => {
+                // 检查响应状态
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.status === 'success' && data.user) {
+                    const user = data.user;
+                    
+                    // 更新页面上的用户信息
+                    updateUserInfoOnPage(user);
+                    
+                    // 更新本地存储中的用户信息
+                    localStorage.setItem('user', JSON.stringify(user));
+                } else {
+                    console.warn('API返回的数据格式不符合预期:', data);
+                    // 不显示错误通知，因为我们已经使用本地存储的信息
+                }
+            })
+            .catch(error => {
+                console.warn('从API加载用户信息失败，使用本地存储的信息:', error);
+                // 不显示错误通知，因为我们已经使用本地存储的信息
+            });
+        }
+        
+        // 更新页面上的用户信息
+        function updateUserInfoOnPage(user) {
+            // 更新页面上的用户信息
+            if (user.username) {
+                document.getElementById('header-username').textContent = user.username;
+                document.getElementById('profile-username').textContent = user.username;
+            }
+            
+            if (user.avatar) {
+                document.getElementById('header-avatar').src = user.avatar;
+                document.getElementById('profile-avatar').src = user.avatar;
+            }
+            
+            if (user.email) {
+                document.getElementById('email').value = user.email;
+                document.getElementById('current-email').value = user.email;
+            }
+            
+            if (typeof user.status !== 'undefined') {
+                document.getElementById('status').value = user.status;
+            }
+        }
+        
+        // 绑定事件
+        function bindEvents() {
+            // 修改邮箱按钮
+            document.getElementById('change-email-btn').addEventListener('click', function() {
+                document.getElementById('change-email-modal').classList.remove('hidden');
+            });
+            
+            // 注销账号按钮
+            document.getElementById('delete-account-btn').addEventListener('click', function() {
+                document.getElementById('delete-account-modal').classList.remove('hidden');
+            });
+            
+            // 退出登录按钮
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                logout();
+            });
+            
+            // 个人资料表单提交
+            document.getElementById('profile-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                updateProfile(e);
+            });
+            
+            // 密码修改表单提交
+            document.getElementById('password-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                changePassword(e);
+            });
+            
+            // 修改邮箱表单提交
+            document.getElementById('change-email-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                changeEmail(e);
+            });
+            
+            // 注销账号表单提交
+            document.getElementById('delete-account-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                deleteAccount(e);
+            });
+            
+            // 关闭模态框按钮
+            document.querySelectorAll('.close-modal').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('.fixed.inset-0.bg-black.bg-opacity-50').forEach(function(modal) {
+                        modal.classList.add('hidden');
+                    });
+                });
+            });
+            
+            // 点击模态框外部关闭
+            document.querySelectorAll('.fixed.inset-0.bg-black.bg-opacity-50').forEach(function(modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        modal.classList.add('hidden');
+                    }
+                });
+            });
+        }
+        
+        // 更新个人资料
+        function updateProfile(event) {
+            const status = document.getElementById('status').value;
+            
+            // 添加加载状态
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>保存中...';
+            
+            fetch('api/user.php', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    status: status
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.status === 'success') {
+                    // 更新本地存储中的用户状态
+                    const userInfo = localStorage.getItem('user');
+                    if (userInfo) {
+                        try {
+                            const user = JSON.parse(userInfo);
+                            user.status = status;
+                            localStorage.setItem('user', JSON.stringify(user));
+                        } catch (e) {
+                            console.error('更新本地存储失败:', e);
+                        }
+                    }
+                    showNotification('个人资料更新成功', 'success');
+                } else {
+                    showNotification(data && data.message ? data.message : '更新失败', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('更新个人资料失败:', error);
+                showNotification('更新失败: ' + error.message, 'error');
+            })
+            .finally(() => {
+                // 恢复按钮状态
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            });
+        }
+        
+        // 修改密码
+        function changePassword(event) {
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            if (newPassword !== confirmPassword) {
+                showNotification('两次输入的密码不一致', 'error');
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                showNotification('新密码长度不能少于6位', 'error');
+                return;
+            }
+            
+            // 添加加载状态
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>修改中...';
+            
+            fetch('api/user.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    action: 'change_password',
+                    current_password: currentPassword,
+                    new_password: newPassword
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.status === 'success') {
+                    document.getElementById('password-form').reset();
+                    showNotification('密码修改成功', 'success');
+                } else {
+                    showNotification(data && data.message ? data.message : '密码修改失败', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('修改密码失败:', error);
+                showNotification('密码修改失败: ' + error.message, 'error');
+            })
+            .finally(() => {
+                // 恢复按钮状态
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            });
+        }
+        
+        // 修改邮箱
+        function changeEmail(event) {
+            const newEmail = document.getElementById('new-email').value;
+            const password = document.getElementById('email-password').value;
+            
+            // 验证邮箱格式
+            if (!validateEmail(newEmail)) {
+                showNotification('邮箱格式不正确', 'error');
+                return;
+            }
+            
+            // 添加加载状态
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>修改中...';
+            
+            fetch('api/user.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    action: 'change_email',
+                    new_email: newEmail,
+                    password: password
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.status === 'success') {
+                    // 更新页面和本地存储中的邮箱
+                    document.getElementById('email').value = newEmail;
+                    document.getElementById('current-email').value = newEmail;
+                    
+                    // 更新本地存储
+                    const userInfo = localStorage.getItem('user');
+                    if (userInfo) {
+                        try {
+                            const user = JSON.parse(userInfo);
+                            user.email = newEmail;
+                            localStorage.setItem('user', JSON.stringify(user));
+                        } catch (e) {
+                            console.error('更新本地存储失败:', e);
+                        }
+                    }
+                    
+                    document.getElementById('change-email-modal').classList.add('hidden');
+                    document.getElementById('change-email-form').reset();
+                    showNotification('邮箱修改成功', 'success');
+                } else {
+                    showNotification(data && data.message ? data.message : '邮箱修改失败', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('修改邮箱失败:', error);
+                showNotification('邮箱修改失败: ' + error.message, 'error');
+            })
+            .finally(() => {
+                // 恢复按钮状态
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            });
+        }
+        
+        // 验证邮箱格式
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+        
+        // 注销账号
+        function deleteAccount(event) {
+            const password = document.getElementById('delete-password').value;
+            
+            if (!password) {
+                showNotification('请输入密码确认注销', 'error');
+                return;
+            }
+            
+            // 添加加载状态
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>注销中...';
+            
+            fetch('api/user.php', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    password: password
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.status === 'success') {
+                    showNotification('账号注销成功', 'success');
+                    setTimeout(() => {
+                        localStorage.removeItem('user');
+                        window.location.href = 'index.html';
+                    }, 2000);
+                } else {
+                    showNotification(data && data.message ? data.message : '账号注销失败', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('注销账号失败:', error);
+                showNotification('账号注销失败: ' + error.message, 'error');
+            })
+            .finally(() => {
+                // 恢复按钮状态
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            });
+        }
+        
+        // 退出登录
+        function logout() {
+            // 添加加载状态
+            const logoutBtn = document.getElementById('logout-btn');
+            const originalText = logoutBtn.textContent;
+            logoutBtn.disabled = true;
+            logoutBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>退出中...';
+            
+            fetch(API_CONFIG.LOGOUT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 无论成功与否，都清除本地存储并重定向到登录页面
+                localStorage.removeItem('user');
+                window.location.href = 'index.html';
+            })
+            .catch(error => {
+                console.error('退出登录失败:', error);
+                // 即使失败也清除本地存储并重定向
+                localStorage.removeItem('user');
+                window.location.href = 'index.html';
+            })
+            .finally(() => {
+                // 恢复按钮状态（虽然通常不会执行到这里，因为会重定向）
+                logoutBtn.disabled = false;
+                logoutBtn.textContent = originalText;
+            });
+        }
+        
+        // 显示通知
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notification-container');
+            const notification = document.createElement('div');
+            
+            // 设置通知样式
+            let bgColor = 'bg-blue-500'; // 默认信息通知
+            if (type === 'success') {
+                bgColor = 'bg-green-500';
+            } else if (type === 'error') {
+                bgColor = 'bg-red-500';
+            } else if (type === 'warning') {
+                bgColor = 'bg-yellow-500';
+            }
+            
+            notification.className = `${bgColor} text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 opacity-0 translate-x-full`;
+            notification.textContent = message;
+            
+            // 添加到容器
+            container.appendChild(notification);
+            
+            // 显示通知
+            setTimeout(() => {
+                notification.classList.remove('opacity-0', 'translate-x-full');
+            }, 10);
+            
+            // 自动隐藏
+            setTimeout(() => {
+                notification.classList.add('opacity-0', 'translate-x-full');
+                setTimeout(() => {
+                    container.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
